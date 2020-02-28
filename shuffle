@@ -1,0 +1,17 @@
+#!/bin/bash
+
+FILENAME=$1
+echo " ... shuffle file $FILENAME"
+awk 'BEGIN{ srand(4) }
+{ lines[++d]=cat $0 }
+END{
+    while (e!=d) {
+        RANDOM = int(1 + rand() * d)
+        if ( RANDOM in lines ) {
+            print lines[RANDOM]
+            delete lines[RANDOM]
+            ++e
+        }
+    }
+}' $FILENAME > /tmp/shuffle.tmp
+mv /tmp/shuffle.tmp $FILENAME
