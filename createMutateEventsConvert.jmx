@@ -74,7 +74,7 @@
           </elementProp>
           <elementProp name="ORGANDHVSFIELDS" elementType="Argument">
             <stringProp name="Argument.name">ORGANDHVSFIELDS</stringProp>
-            <stringProp name="Argument.value">${__P(input_file,/Users/j.guo/Perf-scripts-to-enable-HVS/datasetup/Mutations/multiorg.csv)}</stringProp>
+            <stringProp name="Argument.value">${__P(input_file,/Users/j.guo/Perf-scripts-to-enable-HVS/datasetup/Mutations/multiorg2.csv)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="EMAILOPEN_VOLUME" elementType="Argument">
@@ -90,6 +90,11 @@
           <elementProp name="MUTATEFILE" elementType="Argument">
             <stringProp name="Argument.name">MUTATEFILE</stringProp>
             <stringProp name="Argument.value">${__P(mutateFile,oneorg.csv)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="ITEMS_PER_REQ" elementType="Argument">
+            <stringProp name="Argument.name">ITEMS_PER_REQ</stringProp>
+            <stringProp name="Argument.value">${__P(items_per_req,10)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -520,19 +525,59 @@ FileUtils.writeStringToFile(csvFile, fileData);
               </BeanShellSampler>
               <hashTree/>
             </hashTree>
-            <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler" enabled="true">
-              <stringProp name="cacheKey"></stringProp>
-              <stringProp name="filename"></stringProp>
-              <stringProp name="parameters"></stringProp>
-              <stringProp name="script">import java.time.*;
+            <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Convert Controller" enabled="true">
+              <boolProp name="LoopController.continue_forever">true</boolProp>
+              <stringProp name="LoopController.loops">${ITEMS_PER_REQ}</stringProp>
+            </LoopController>
+            <hashTree>
+              <CounterConfig guiclass="CounterConfigGui" testclass="CounterConfig" testname="Convert Counter" enabled="true">
+                <stringProp name="CounterConfig.start">1</stringProp>
+                <stringProp name="CounterConfig.end">${ITEMS_PER_REQ}</stringProp>
+                <stringProp name="CounterConfig.incr">1</stringProp>
+                <stringProp name="CounterConfig.name">LOOP_CNT</stringProp>
+                <stringProp name="CounterConfig.format"></stringProp>
+                <boolProp name="CounterConfig.per_user">true</boolProp>
+                <boolProp name="CounterConfig.reset_on_tg_iteration">true</boolProp>
+              </CounterConfig>
+              <hashTree/>
+              <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="BeanShell Sampler" enabled="true">
+                <stringProp name="BeanShellSampler.query">import java.time.*;
 import java.time.format.*;
 
 String localDateTime3  = LocalDateTime.now(ZoneId.of(&quot;UTC&quot;)).toString();
-vars.put(&quot;curTime&quot;, localDateTime3);</stringProp>
-              <stringProp name="scriptLanguage">groovy</stringProp>
-            </JSR223Sampler>
-            <hashTree/>
-            <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="Convert Id" enabled="true">
+
+String convertcreate = &quot;{&quot; +
+	&quot;\&quot;attributes\&quot;:&quot; + &quot;{\&quot;type\&quot;: \&quot;SalesEngagementMutateEvent\&quot;}&quot; + &quot;,&quot; +
+	&quot;\&quot;MutationTime\&quot;:\&quot;&quot; + localDateTime3 + &quot;\&quot;,&quot; + 
+	&quot;\&quot;RecordType\&quot;:\&quot;&quot; + &quot;Target&quot; + &quot;\&quot;,&quot; + 
+	&quot;\&quot;MutationType\&quot;:\&quot;&quot; + &quot;Convert&quot; + &quot;\&quot;,&quot; + 
+	&quot;\&quot;RelatedRecordId\&quot;:\&quot;&quot; + &quot;${leadid20}&quot; + &quot;\&quot;,&quot; + 
+	&quot;\&quot;NewRelatedRecordId\&quot;:\&quot;&quot; + &quot;${__RandomString(18,abcdefghijklmnopqrstuvwxyz,)}&quot; + &quot;\&quot;,&quot; + 
+	&quot;\&quot;NewRelatedRecordName\&quot;:\&quot;&quot; +  &quot;${__RandomString(16,abcdefghijklmnopqrstuvwxyz,)}&quot; + &quot;\&quot;&quot; + 
+&quot;}&quot;;
+
+int loopCnt = Integer.parseInt(vars.get(&quot;LOOP_CNT&quot;));
+int emailsPerReq = Integer.parseInt(vars.get(&quot;ITEMS_PER_REQ&quot;));
+
+String msg = vars.get(&quot;converts&quot;);
+if (loopCnt == 1) {
+	// initialize message
+	msg = &quot;[&quot; + convertcreate;
+} else {
+     msg = msg + &quot;,&quot; + convertcreate;
+};
+if (loopCnt == emailsPerReq) {
+     // finalize message
+     msg = msg + &quot;]&quot;;
+}
+vars.put(&quot;converts&quot;,msg);</stringProp>
+                <stringProp name="BeanShellSampler.filename"></stringProp>
+                <stringProp name="BeanShellSampler.parameters"></stringProp>
+                <boolProp name="BeanShellSampler.resetInterpreter">false</boolProp>
+              </BeanShellSampler>
+              <hashTree/>
+            </hashTree>
+            <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="Convert Id" enabled="false">
               <stringProp name="BeanShellSampler.query">//int twentyor60 = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 2);
 //if(twentyor60 == 0) {
 //	vars.put(&quot;TargetIdConvert&quot;, vars.get(&quot;leadid20&quot;));
@@ -555,7 +600,7 @@ vars.put(&quot;uniqueStrConvert&quot;,randomstring);</stringProp>
               <boolProp name="BeanShellSampler.resetInterpreter">false</boolProp>
             </BeanShellSampler>
             <hashTree/>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Convert Request" enabled="true">
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Convert Request" enabled="false">
               <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
               <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
                 <collectionProp name="Arguments.arguments">
@@ -623,6 +668,60 @@ vars.put(&quot;uniqueStrConvert&quot;,randomstring);</stringProp>
                 <intProp name="Assertion.test_type">2</intProp>
                 <stringProp name="Assertion.custom_message"></stringProp>
               </ResponseAssertion>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Generate Converts Bulk" enabled="true">
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+&quot;allOrNone&quot;: false,&#xd;
+&quot;records&quot;: ${converts}&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+              <stringProp name="HTTPSampler.port"></stringProp>
+              <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+              <stringProp name="HTTPSampler.path">services/data/v${APIVERSION}/composite/sobjects</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+              <stringProp name="HTTPSampler.response_timeout"></stringProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+                <collectionProp name="HeaderManager.headers">
+                  <elementProp name="" elementType="Header">
+                    <stringProp name="Header.name">Content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="" elementType="Header">
+                    <stringProp name="Header.name">Authorization</stringProp>
+                    <stringProp name="Header.value">Bearer ${SESSIONID2}</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </HeaderManager>
+              <hashTree/>
+              <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="JSON Extractor" enabled="false">
+                <stringProp name="JSONPostProcessor.referenceNames">leadids</stringProp>
+                <stringProp name="JSONPostProcessor.jsonPathExprs">$..id</stringProp>
+                <stringProp name="JSONPostProcessor.match_numbers">-1</stringProp>
+              </JSONPostProcessor>
+              <hashTree/>
+              <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="Constant Throughput Timer" enabled="true">
+                <intProp name="calcMode">4</intProp>
+                <stringProp name="throughput">${THROUGHPUT_PER_MIN_CONVERT}</stringProp>
+              </ConstantThroughputTimer>
               <hashTree/>
             </hashTree>
           </hashTree>
